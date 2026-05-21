@@ -250,6 +250,17 @@ nav a:hover {
     color: #111;
 }
 
+.btn-amazon {
+    margin-top: 0;
+    border-color: #ff9900;
+    color: #ff9900;
+}
+
+.btn-amazon:hover {
+    background: #ff9900;
+    color: #111;
+}
+
 .btn-middle {
     margin-top: 0;
     align-self: center;
