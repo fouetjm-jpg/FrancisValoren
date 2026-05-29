@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Export Bannière YouTube – Francis Valoren</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: Georgia, serif;
+    color: #c9a84c;
+    gap: 24px;
+    padding: 24px;
+  }
+  h1 { font-size: 1.2rem; letter-spacing: 4px; color: #e8c96d; text-transform: uppercase; }
+  p.info {
+    font-size: 0.85rem;
+    color: #888;
+    max-width: 700px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .safe-note {
+    font-size: 0.8rem;
+    color: #666;
+    border: 1px solid #333;
+    padding: 10px 18px;
+    border-radius: 4px;
+    max-width: 700px;
+    text-align: center;
+    line-height: 1.6;
+  }
+  .preview-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+  }
+  canvas {
+    width: 100%;
+    border: 1px solid #333;
+    display: block;
+  }
+  /* Overlay zone sécurisée */
+  .safe-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .safe-box {
+    position: absolute;
+    border: 1px dashed rgba(201,168,76,0.45);
+    box-shadow: inset 0 0 0 1px rgba(201,168,76,0.15);
+  }
+  .safe-label {
+    position: absolute;
+    font-size: 10px;
+    color: rgba(201,168,76,0.6);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  button {
+    background: linear-gradient(135deg, #c9a84c, #8b6914);
+    color: #1a1208;
+    border: none;
+    padding: 14px 40px;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: opacity 0.2s;
+  }
+  button:hover { opacity: 0.85; }
+  button:disabled { opacity: 0.4; cursor: wait; }
+  #status { font-size: 0.8rem; color: #666; min-height: 1.2em; }
+</style>
+</head>
+<body>
+
+<h1>Bannière YouTube — Francis Valoren</h1>
+
+<p class="info">
+  Cliquez sur <strong style="color:#e8c96d">Télécharger PNG</strong> pour obtenir l'image
+  au format YouTube (2560 × 1440 px).<br>
+  <span style="color:#e8c96d">FRANCIS · VALOREN · AUTEUR…</span> sont désormais
+  entièrement dans la zone sécurisée ordinateur (cadre or). Le site et les ornements
+  restent visibles sur TV et plein écran.
+</p>
+
+<div class="preview-wrap">
+  <canvas id="cvs" width="2560" height="1440"></canvas>
+  <div class="safe-overlay" id="overlay">
+    <!-- les boîtes sont calculées en JS selon la taille affichée -->
+  </div>
+</div>
+
+<div class="safe-note">
+  📱 Téléphone : zone centrale 1546 × 423 px &nbsp;|&nbsp;
+  🖥 Ordinateur : 2560 × 423 px &nbsp;|&nbsp;
+  📺 TV / Full : 2560 × 1440 px
+</div>
+
+<button id="btnDl" onclick="download()">Télécharger PNG (2560×1440)</button>
+<div id="status"></div>
+
+<script>
+const W = 2560, H = 1440;
+const cvs = document.getElementById('cvs');
+const ctx = cvs.getContext('2d');
+
+// ─── Couleurs ───────────────────────────────────────────────────
+const DARK_BG   = '#1a1208';
+const DARK_BG2  = '#0d0a04';
+const GOLD      = '#c9a84c';
+const GOLD_LT   = '#e8c96d';
+const GOLD_DK   = '#8b6914';
+const CREAM     = '#f5e6c8';
+
+function hexToRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+// ─── Fond dégradé radial ─────────────────────────────────────────
+function drawBackground() {
+  const grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W*0.6);
+  grad.addColorStop(0,   '#2a1e10');
+  grad.addColorStop(0.5, DARK_BG);
+  grad.addColorStop(1,   DARK_BG2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Lueur centrale subtile
+  const glow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 800);
+  glow.addColorStop(0, hexToRgba(GOLD, 0.07));
+  glow.addColorStop(1, hexToRgba(GOLD, 0));
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+}
+
+// ─── Lettres FV filigrane ─────────────────────────────────────────
+function drawWatermark() {
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  ctx.fillStyle = GOLD;
+  ctx.font = 'bold 900px Georgia, serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('FV', W/2, H/2 + 80);
+  ctx.restore();
+}
+
+// ─── Bordures ─────────────────────────────────────────────────────
+function drawBorders() {
+  // Bordures épaisses or (gradient horizontal)
+  function hBorderGrad(y, h) {
+    const g = ctx.createLinearGradient(0, 0, W, 0);
+    g.addColorStop(0,    '#2a1e10');
+    g.addColorStop(0.12, GOLD);
+    g.addColorStop(0.5,  GOLD_LT);
+    g.addColorStop(0.88, GOLD);
+    g.addColorStop(1,    '#2a1e10');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, y, W, h);
+  }
+  function vBorderGrad(x, w) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0,    '#2a1e10');
+    g.addColorStop(0.12, GOLD);
+    g.addColorStop(0.5,  GOLD_LT);
+    g.addColorStop(0.88, GOLD);
+    g.addColorStop(1,    '#2a1e10');
+    ctx.fillStyle = g;
+    ctx.fillRect(x, 0, w, H);
+  }
+  hBorderGrad(0, 12);
+  hBorderGrad(H - 12, 12);
+  vBorderGrad(0, 12);
+  vBorderGrad(W - 12, 12);
+
+  // Lignes fines intérieures
+  ctx.strokeStyle = hexToRgba(GOLD, 0.35);
+  ctx.lineWidth = 2;
+  ctx.strokeRect(40, 40, W - 80, H - 80);
+
+  // Ornements de coins
+  const corners = [
+    [40, 40, 1, 1], [W-40, 40, -1, 1],
+    [40, H-40, 1, -1], [W-40, H-40, -1, -1]
+  ];
+  ctx.strokeStyle = hexToRgba(GOLD, 0.65);
+  ctx.lineWidth = 2.5;
+  corners.forEach(([cx, cy, dx, dy]) => {
+    ctx.beginPath();
+    ctx.moveTo(cx, cy); ctx.lineTo(cx + dx*70, cy);
+    ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + dy*70);
+    ctx.stroke();
+  });
+}
+
+// ─── Ombre texte ──────────────────────────────────────────────────
+function setShadow(color, blur, ox=0, oy=2) {
+  ctx.shadowColor = color;
+  ctx.shadowBlur = blur;
+  ctx.shadowOffsetX = ox;
+  ctx.shadowOffsetY = oy;
+}
+function clearShadow() {
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 0;
+}
+
+// ─── Ornement tiret+flèche+point ─────────────────────────────────
+function drawOrnament(cx, cy, lineLen=200) {
+  ctx.strokeStyle = hexToRgba(GOLD, 0.55);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - lineLen, cy); ctx.lineTo(cx - 28, cy);
+  ctx.moveTo(cx + 28, cy);     ctx.lineTo(cx + lineLen, cy);
+  ctx.stroke();
+
+  ctx.fillStyle = hexToRgba(GOLD, 0.8);
+  // flèche gauche
+  ctx.beginPath();
+  ctx.moveTo(cx-20, cy); ctx.lineTo(cx-32, cy-7); ctx.lineTo(cx-32, cy+7);
+  ctx.closePath(); ctx.fill();
+  // flèche droite
+  ctx.beginPath();
+  ctx.moveTo(cx+20, cy); ctx.lineTo(cx+32, cy-7); ctx.lineTo(cx+32, cy+7);
+  ctx.closePath(); ctx.fill();
+  // point central
+  ctx.fillStyle = hexToRgba(GOLD, 0.9);
+  ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI*2); ctx.fill();
+}
+
+// ─── Dégradé or pour texte ───────────────────────────────────────
+function goldTextGrad(y, fontSize) {
+  const g = ctx.createLinearGradient(0, y - fontSize, 0, y);
+  g.addColorStop(0,   GOLD_LT);
+  g.addColorStop(0.4, GOLD);
+  g.addColorStop(1,   GOLD_DK);
+  return g;
+}
+
+// ─── Textes ───────────────────────────────────────────────────────
+// Zone sécurisée ordinateur : y=508 à y=931 (423px, centré à y=720)
+// TOUT le contenu principal est dans cette bande.
+function drawText() {
+  ctx.textAlign = 'center';
+
+  // Ornement supérieur (hors zone — TV/plein écran uniquement)
+  drawOrnament(W/2, 465, 200);
+
+  // ── FRANCIS ── cap-top ≈ y=541, baseline y=643
+  ctx.font = 'bold 145px Georgia, serif';
+  ctx.letterSpacing = '20px';
+  setShadow(hexToRgba(CREAM, 0.25), 12, 0, 2);
+  ctx.fillStyle = CREAM;
+  ctx.fillText('FRANCIS', W/2, 643);
+  clearShadow();
+
+  // ── VALOREN ── cap-top ≈ y=655, baseline y=778
+  ctx.font = 'bold 175px Georgia, serif';
+  ctx.letterSpacing = '14px';
+  setShadow(hexToRgba(GOLD, 0.4), 15, 0, 3);
+  ctx.fillStyle = goldTextGrad(778, 175);
+  ctx.fillText('VALOREN', W/2, 778);
+  clearShadow();
+
+  // ── Séparatrice ── y=796–804
+  const lineGrad = ctx.createLinearGradient(680, 0, 1880, 0);
+  lineGrad.addColorStop(0,   'transparent');
+  lineGrad.addColorStop(0.1, GOLD);
+  lineGrad.addColorStop(0.5, GOLD_LT);
+  lineGrad.addColorStop(0.9, GOLD);
+  lineGrad.addColorStop(1,   'transparent');
+  ctx.strokeStyle = lineGrad;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(700, 796); ctx.lineTo(1860, 796); ctx.stroke();
+  ctx.strokeStyle = hexToRgba(GOLD, 0.28);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(820, 804); ctx.lineTo(1740, 804); ctx.stroke();
+
+  // ── AUTEUR · ROMANS · COURS NARRATIF ── baseline y=845
+  ctx.font = '52px Georgia, serif';
+  ctx.letterSpacing = '9px';
+  setShadow(hexToRgba(GOLD, 0.3), 8, 0, 1);
+  ctx.fillStyle = GOLD;
+  ctx.fillText('AUTEUR  ·  ROMANS  ·  COURS NARRATIF', W/2, 845);
+  clearShadow();
+
+  // ── francisvaloren.com ── baseline y=882, dans la zone sécurisée
+  ctx.strokeStyle = hexToRgba(GOLD, 0.28);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(1100, 858); ctx.lineTo(1460, 858); ctx.stroke();
+
+  ctx.font = '38px Georgia, serif';
+  ctx.letterSpacing = '5px';
+  ctx.fillStyle = hexToRgba(GOLD, 0.55);
+  ctx.fillText('francisvaloren.com', W/2, 882);
+
+  // Ornement inférieur (hors zone — TV/plein écran)
+  drawOrnament(W/2, 960, 160);
+}
+
+// ─── Illustration livre (côté droit) ─────────────────────────────
+function drawIllustration(img) {
+  const IW = 580, IH = 326;          // proportions 16:9
+  const ix = W - 220 - IW;           // aligné à droite, marge 220px
+  const iy = H / 2 - IH / 2;        // centré verticalement
+
+  // Ombre portée douce
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.7)';
+  ctx.shadowBlur  = 40;
+  ctx.shadowOffsetX = 12;
+  ctx.shadowOffsetY = 16;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(ix, iy, IW, IH);
+  ctx.restore();
+
+  // Image
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(ix, iy, IW, IH);
+  ctx.clip();
+  ctx.drawImage(img, ix, iy, IW, IH);
+  ctx.restore();
+
+  // Voile léger pour fondre avec le fond
+  const fade = ctx.createLinearGradient(ix, 0, ix + IW, 0);
+  fade.addColorStop(0,   hexToRgba(DARK_BG, 0.55));
+  fade.addColorStop(0.2, hexToRgba(DARK_BG, 0));
+  fade.addColorStop(1,   hexToRgba(DARK_BG, 0));
+  ctx.fillStyle = fade;
+  ctx.fillRect(ix, iy, IW, IH);
+
+  // Cadre or (double filet)
+  ctx.strokeStyle = hexToRgba(GOLD, 0.85);
+  ctx.lineWidth = 4;
+  ctx.strokeRect(ix, iy, IW, IH);
+  ctx.strokeStyle = hexToRgba(GOLD, 0.3);
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(ix + 10, iy + 10, IW - 20, IH - 20);
+}
+
+// ─── Rendu complet ────────────────────────────────────────────────
+function render() {
+  drawBackground();
+  drawWatermark();
+  drawBorders();
+  drawText();
+
+  const img = new Image();
+  img.onload = () => {
+    drawIllustration(img);
+    drawSafeZoneOverlay();
+  };
+  img.onerror = () => drawSafeZoneOverlay();
+  img.src = 'villa_obsidienne.png';
+}
+
+// ─── Overlay zone sécurisée (sur le canvas affiché seulement) ────
+function drawSafeZoneOverlay() {
+  const displayed = cvs.getBoundingClientRect();
+  const scaleX = displayed.width  / W;
+  const scaleY = displayed.height / H;
+  const overlay = document.getElementById('overlay');
+  overlay.innerHTML = '';
+
+  const zones = [
+    { w: 1546, h: 423, label: '📱 Téléphone', color: 'rgba(201,168,76,0.5)' },
+    { w: 1855, h: 423, label: '📋 Tablette',  color: 'rgba(100,180,255,0.3)' },
+  ];
+  zones.forEach(z => {
+    const x = (W - z.w) / 2 * scaleX;
+    const y = (H - z.h) / 2 * scaleY;
+    const box = document.createElement('div');
+    box.className = 'safe-box';
+    box.style.cssText = `left:${x}px;top:${y}px;width:${z.w*scaleX}px;height:${z.h*scaleY}px;border-color:${z.color};`;
+    const lbl = document.createElement('div');
+    lbl.className = 'safe-label';
+    lbl.style.cssText = `left:${x+4}px;top:${y+2}px;color:${z.color};`;
+    lbl.textContent = z.label;
+    overlay.appendChild(box);
+    overlay.appendChild(lbl);
+  });
+}
+
+// ─── Téléchargement ───────────────────────────────────────────────
+function download() {
+  const btn = document.getElementById('btnDl');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  status.textContent = 'Génération en cours…';
+  setTimeout(() => {
+    const link = document.createElement('a');
+    link.download = 'banniere_youtube_francis_valoren_2560x1440.png';
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    status.textContent = 'Téléchargé ! Importez ce fichier PNG dans YouTube Studio → Personnalisation → Image de bannière.';
+  }, 50);
+}
+
+// ─── Init ─────────────────────────────────────────────────────────
+render();
+window.addEventListener('resize', drawSafeZoneOverlay);
+</script>
+</body>
+</html>
