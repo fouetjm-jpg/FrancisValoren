@@ -4,12 +4,34 @@ import time
 import random
 import requests
 from datetime import datetime
-from books import BOOKS
 
 THREADS_USER_ID = os.environ["THREADS_USER_ID"]
 THREADS_TOKEN   = os.environ["THREADS_ACCESS_TOKEN"]
 GRAPH_URL       = "https://graph.threads.net/v1.0"
 STATE_FILE      = "threads_agent/state.json"
+
+BOOKS = [
+    {
+        "title": "Le Jardin du Premier Souffle",
+        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/jardin.jpg",
+    },
+    {
+        "title": "Liberté, Égalité, Facturé",
+        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/liberte.jpg",
+    },
+    {
+        "title": "Le Chant de la Terre",
+        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/terre.jpg",
+    },
+    {
+        "title": "Quand l'Humanité Cesse d'Écouter",
+        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/arbres.jpg",
+    },
+    {
+        "title": "La Danse des Corps Perdus",
+        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/danse.jpg",
+    },
+]
 
 CAPTIONS = {
     "Le Jardin du Premier Souffle": [
