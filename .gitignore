@@ -1,0 +1,8 @@
+threads_agent/.env
+threads_agent/.env.example
+threads_agent/__pycache__/
+threads_agent/state.json
+threads_agent/agent.py
+threads_agent/books.py
+threads_agent/get_token.py
+threads_agent/start.bat
