@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Autorisation Threads</title>
+    <style>
+        body { font-family: monospace; padding: 40px; background: #111; color: #eee; }
+        code { background: #222; padding: 10px 20px; display: block; font-size: 1.2em; margin: 20px 0; border-radius: 6px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h2>Code d'autorisation Threads</h2>
+    <p>Copiez ce code et collez-le dans le terminal :</p>
+    <code id="code">Chargement...</code>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        document.getElementById('code').textContent = code || 'Aucun code trouvé dans l\'URL.';
+    </script>
+</body>
+</html>
