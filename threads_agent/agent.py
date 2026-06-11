@@ -4,34 +4,13 @@ import time
 import random
 import requests
 from datetime import datetime
+from books import BOOKS
 
 THREADS_USER_ID = os.environ["THREADS_USER_ID"]
 THREADS_TOKEN   = os.environ["THREADS_ACCESS_TOKEN"]
-GRAPH_URL       = "https://graph.threads.net/v1.0"
-STATE_FILE      = "threads_agent/state.json"
 
-BOOKS = [
-    {
-        "title": "Le Jardin du Premier Souffle",
-        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/jardin.jpg",
-    },
-    {
-        "title": "Liberté, Égalité, Facturé",
-        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/liberte.jpg",
-    },
-    {
-        "title": "Le Chant de la Terre",
-        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/terre.jpg",
-    },
-    {
-        "title": "Quand l'Humanité Cesse d'Écouter",
-        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/arbres.jpg",
-    },
-    {
-        "title": "La Danse des Corps Perdus",
-        "image_url": "https://raw.githubusercontent.com/fouetjm-jpg/FrancisValoren/main/images/danse.jpg",
-    },
-]
+GRAPH_URL  = "https://graph.threads.net/v1.0"
+STATE_FILE = "state.json"
 
 CAPTIONS = {
     "Le Jardin du Premier Souffle": [
@@ -46,7 +25,7 @@ CAPTIONS = {
         "En 2025, avoir une douche fait de vous un privilégié.\nEn 1789, ne pas manger trois jours était une condamnation.\nTrois siècles. Le même génie fiscal.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
         "Les Présidents taxent les taxes.\nLes Rois taxaient le pain.\nLa France ne change que de costume et de titre.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
         "Un peuple qui encaisse, qui patiente, qui survit… jusqu'au jour où il ne peut plus.\nCe jour-là, il crie.\nEt les oreilles d'État sont miraculeusement bouchées — depuis plus de trois siècles.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
-        "Julien, 2025. Jean-Baptiste, 1789.\nDeux destins ordinaires. Une France épuisée, une France affamée. Un seul miroir.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
+        "Julien, 2025. Jean-Baptiste, 1789.\nDeux destins ordinaires. Une France épuisée, une France affamée.\nUn seul miroir.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
         "Quand la faim devient politique, l'Histoire cesse d'être un souvenir.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
         "Liberté, Égalité, Facturé — deux époques, un seul constat :\nla France a toujours su habiller l'injustice en institution.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=Libert%C3%A9+%C3%89galit%C3%A9+Factur%C3%A9\n#FrancisValoren #LibertéÉgalitéFacturé #Roman #Satire",
     ],
@@ -61,17 +40,17 @@ CAPTIONS = {
     "Quand l'Humanité Cesse d'Écouter": [
         "Un bûcheron. Une forêt. Et le jour où il entend enfin ce qu'il avait toujours ignoré : les arbres parlent.\nIls murmurent leur mémoire. Ils savent ce qu'il vient chercher.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
         "Ils se souviennent de tout ce que l'humanité a détruit.\nEt ils observent, endurent, résistent.\n« Que devenons-nous quand nous entendons enfin ce que nous détruisons ? »\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
-        "D'un côté, les hommes qui calculent et exploitent.\nDe l'autre, la forêt qui observe et résiste.\nUn bûcheron coincé entre les deux.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
-        "La forêt parle. Elle murmure sa mémoire, son organisation, ses peurs.\nElle sait ce que l'homme vient chercher. Et elle se souvient de tout.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
+        "D'un côté, les hommes qui calculent et exploitent.\nDe l'autre, la forêt qui observe et résiste.\nUn bûcheron coincé entre les deux. Un conte philosophique sur la mémoire du vivant.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
+        "La forêt parle. Elle murmure sa mémoire, son organisation, ses peurs.\nElle sait ce que l'homme vient chercher.\nEt elle se souvient de tout.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
         "Un conte philosophique sur la déforestation, la mémoire du vivant,\net la possibilité fragile d'un équilibre entre l'homme et la nature.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
-        "Au bord d'une forêt sans limites, un homme vivait seul avec sa hache.\nJusqu'au jour où la forêt a décidé de lui parler. Il n'était pas prêt.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
+        "Au bord d'une forêt sans limites, un homme vivait seul avec sa hache.\nJusqu'au jour où la forêt a décidé de lui parler.\nIl n'était pas prêt.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/dp/B0H2W6L43H\n#FrancisValoren #QuandLHumanitéCesseDÉcouter #ContePhilosophique #Nature",
     ],
     "La Danse des Corps Perdus": [
         "Strasbourg, juillet 1518. Une femme se met à danser seule dans une rue. Elle ne s'arrêtera plus.\nQuatre cents personnes la suivront. Certaines en mourront.\nLes faits ont eu lieu. Personne ne sait pourquoi.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
         "Le chirurgien Gregor Metz observe, note, cherche.\nIl traverse une ville paralysée par la peur, des corps épuisés qui dansent jusqu'au sang.\nNi la science ni la foi ne parviennent à nommer ce qu'il voit.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
         "Un roman sobre et tendu sur les limites de la raison humaine face à l'inexplicable.\nEt sur ce que la peur collective peut faire à des corps, à une ville, à une époque entière.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
-        "Ils dansaient jusqu'au sang. Jusqu'à l'épuisement. Jusqu'à la mort.\nSans musique. Sans volonté. Sans pouvoir s'arrêter. C'est une histoire vraie.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
-        "Que se passe-t-il quand la peur collective s'empare d'une ville entière ?\nStrasbourg, 1518. La réponse est terrifiante — et réelle.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
+        "Ils dansaient jusqu'au sang. Jusqu'à l'épuisement. Jusqu'à la mort.\nSans musique. Sans volonté. Sans pouvoir s'arrêter.\nC'est une histoire vraie.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
+        "Que se passe-t-il quand la peur collective s'empare d'une ville entière ?\nStasbourg, 1518. La réponse est terrifiante — et réelle.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
         "L'une des épidémies les plus étranges de l'histoire humaine.\nUn chirurgien seul face à l'inexplicable.\nLes faits ont eu lieu. Personne ne sait pourquoi.\n\n📖 Disponible sur Amazon → https://www.amazon.fr/s?k=La+Danse+des+Corps+Perdus+Francis+Valoren\n#FrancisValoren #LaDanseDesCorpsPerdus #Roman #Histoire",
     ],
 }
@@ -98,36 +77,77 @@ def pick_caption(book):
     if not available:
         available = list(range(len(captions)))
         state.setdefault("used", {})[title] = []
+        save_state(state)
     idx = random.choice(available)
     state.setdefault("used", {}).setdefault(title, []).append(idx)
     save_state(state)
     return captions[idx]
 
 
+def create_threads_container(caption, image_url):
+    resp = requests.post(
+        f"{GRAPH_URL}/{THREADS_USER_ID}/threads",
+        params={
+            "media_type": "IMAGE",
+            "image_url": image_url,
+            "text": caption,
+            "access_token": THREADS_TOKEN,
+        },
+    )
+    resp.raise_for_status()
+    return resp.json()["id"]
+
+
+def publish_container(container_id):
+    resp = requests.post(
+        f"{GRAPH_URL}/{THREADS_USER_ID}/threads_publish",
+        params={
+            "creation_id": container_id,
+            "access_token": THREADS_TOKEN,
+        },
+    )
+    resp.raise_for_status()
+    return resp.json()["id"]
+
+
 def post_once():
     state = load_state()
     book = BOOKS[state["index"] % len(BOOKS)]
-    print(f"Livre : {book['title']}")
+
+    print(f"[{datetime.now():%H:%M}] Livre : {book['title']}")
+
     caption = pick_caption(book)
     print(f"Caption :\n{caption}\n")
-    resp = requests.post(
-        f"{GRAPH_URL}/{THREADS_USER_ID}/threads",
-        params={"media_type": "IMAGE", "image_url": book["image_url"],
-                "text": caption, "access_token": THREADS_TOKEN},
-    )
-    resp.raise_for_status()
-    container_id = resp.json()["id"]
+
+    container_id = create_threads_container(caption, book["image_url"])
     time.sleep(30)
-    resp2 = requests.post(
-        f"{GRAPH_URL}/{THREADS_USER_ID}/threads_publish",
-        params={"creation_id": container_id, "access_token": THREADS_TOKEN},
-    )
-    resp2.raise_for_status()
-    print(f"Post publié — ID : {resp2.json()['id']}")
+    post_id = publish_container(container_id)
+
+    print(f"Post publié — ID : {post_id}")
+
     state["index"] = (state["index"] + 1) % len(BOOKS)
     state["count"] = state.get("count", 0) + 1
     save_state(state)
 
 
+POST_HOURS = {8, 20}
+
+
+def run_loop():
+    print("Agent démarré — posts à 8h00 et 20h00 chaque jour.")
+    posted_today = set()
+    while True:
+        now = datetime.now()
+        key = (now.date(), now.hour)
+        if now.hour in POST_HOURS and key not in posted_today:
+            try:
+                post_once()
+                posted_today.add(key)
+            except Exception as e:
+                print(f"Erreur : {e}")
+        posted_today = {k for k in posted_today if k[0] == now.date()}
+        time.sleep(60)
+
+
 if __name__ == "__main__":
-    post_once()
+    run_loop()
