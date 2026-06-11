@@ -1,14 +1,17 @@
 import os
-import json
 import time
-import random
 import requests
-from datetime import datetime
+from datetime import date, datetime
 
 THREADS_USER_ID = os.environ["THREADS_USER_ID"]
 THREADS_TOKEN   = os.environ["THREADS_ACCESS_TOKEN"]
 GRAPH_URL       = "https://graph.threads.net/v1.0"
-STATE_FILE      = "threads_agent/state.json"
+EPOCH           = date(2026, 6, 11)
+
+def post_number():
+    days = (date.today() - EPOCH).days
+    slot = 0 if datetime.now().hour < 14 else 1
+    return days * 2 + slot
 
 BOOKS = [
     {
@@ -77,38 +80,19 @@ CAPTIONS = {
 }
 
 
-def load_state():
-    if os.path.exists(STATE_FILE):
-        with open(STATE_FILE) as f:
-            return json.load(f)
-    return {"index": 0, "used": {}}
-
-
-def save_state(state):
-    with open(STATE_FILE, "w") as f:
-        json.dump(state, f)
-
-
-def pick_caption(book):
-    title = book["title"]
-    captions = CAPTIONS[title]
-    state = load_state()
-    used = state.get("used", {}).get(title, [])
-    available = [i for i in range(len(captions)) if i not in used]
-    if not available:
-        available = list(range(len(captions)))
-        state.setdefault("used", {})[title] = []
-    idx = random.choice(available)
-    state.setdefault("used", {}).setdefault(title, []).append(idx)
-    save_state(state)
-    return captions[idx]
+def pick_book_and_caption():
+    n = post_number()
+    book = BOOKS[n % len(BOOKS)]
+    captions = CAPTIONS[book["title"]]
+    caption = captions[(n // len(BOOKS)) % len(captions)]
+    return book, caption
 
 
 def post_once():
-    state = load_state()
-    book = BOOKS[state["index"] % len(BOOKS)]
+    book, caption = pick_book_and_caption()
     print(f"Livre : {book['title']}")
-    caption = pick_caption(book)
+    print(f"Post #{post_number()}")
+    print(f"Caption :\n{caption}\n")
     print(f"Caption :\n{caption}\n")
     resp = requests.post(
         f"{GRAPH_URL}/{THREADS_USER_ID}/threads",
@@ -124,9 +108,6 @@ def post_once():
     )
     resp2.raise_for_status()
     print(f"Post publié — ID : {resp2.json()['id']}")
-    state["index"] = (state["index"] + 1) % len(BOOKS)
-    state["count"] = state.get("count", 0) + 1
-    save_state(state)
 
 
 if __name__ == "__main__":
