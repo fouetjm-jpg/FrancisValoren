@@ -21,7 +21,34 @@ jobs:
         run: pip install requests
 
       - name: Post to Threads
+        id: post
         env:
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
-        run: python threads_agent/post_now.py
+        run: |
+          OUTPUT=$(python threads_agent/post_now.py)
+          echo "$OUTPUT"
+          echo "post_output<<EOF" >> $GITHUB_OUTPUT
+          echo "$OUTPUT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Envoyer notification email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.mail.yahoo.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "✅ Post Threads publié — FrancisValoren"
+          to: fouetjm@yahoo.fr
+          from: fouetjm@yahoo.fr
+          body: |
+            Bonjour,
+
+            Un nouveau post a été publié sur Threads avec succès.
+
+            ──────────────────────────────
+            ${{ steps.post.outputs.post_output }}
+            ──────────────────────────────
+
+            Bonne journée !
