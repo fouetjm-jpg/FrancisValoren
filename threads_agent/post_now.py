@@ -6,7 +6,14 @@ from datetime import date, datetime
 THREADS_USER_ID = os.environ["THREADS_USER_ID"]
 THREADS_TOKEN   = os.environ["THREADS_ACCESS_TOKEN"]
 GRAPH_URL       = "https://graph.threads.net/v1.0"
-EPOCH           = date(2026, 6, 11)
+
+IG_USER_ID = os.environ.get("INSTAGRAM_USER_ID", "")
+IG_TOKEN   = os.environ.get("INSTAGRAM_ACCESS_TOKEN", "")
+IG_URL     = "https://graph.facebook.com/v21.0"
+
+TIKTOK_TOKEN = os.environ.get("TIKTOK_ACCESS_TOKEN", "")
+
+EPOCH = date(2026, 6, 11)
 
 def post_number():
     days = (date.today() - EPOCH).days
@@ -89,15 +96,10 @@ def pick_book_and_caption():
     return book, caption
 
 
-def post_once():
-    book, caption = pick_book_and_caption()
-    print(f"Livre : {book['title']}")
-    print(f"Post #{post_number()}")
-    print(f"Caption :\n{caption}\n")
-    print(f"Caption :\n{caption}\n")
+def post_threads(image_url, caption):
     resp = requests.post(
         f"{GRAPH_URL}/{THREADS_USER_ID}/threads",
-        params={"media_type": "IMAGE", "image_url": book["image_url"],
+        params={"media_type": "IMAGE", "image_url": image_url,
                 "text": caption, "access_token": THREADS_TOKEN},
     )
     resp.raise_for_status()
@@ -108,7 +110,68 @@ def post_once():
         params={"creation_id": container_id, "access_token": THREADS_TOKEN},
     )
     resp2.raise_for_status()
-    print(f"Post publié — ID : {resp2.json()['id']}")
+    print(f"Threads publié — ID : {resp2.json()['id']}")
+
+
+def post_instagram(image_url, caption):
+    if not IG_USER_ID or not IG_TOKEN:
+        print("Instagram : secrets manquants, ignoré")
+        return
+    resp = requests.post(
+        f"{IG_URL}/{IG_USER_ID}/media",
+        params={"image_url": image_url, "caption": caption, "access_token": IG_TOKEN},
+    )
+    resp.raise_for_status()
+    container_id = resp.json()["id"]
+    time.sleep(30)
+    resp2 = requests.post(
+        f"{IG_URL}/{IG_USER_ID}/media_publish",
+        params={"creation_id": container_id, "access_token": IG_TOKEN},
+    )
+    resp2.raise_for_status()
+    print(f"Instagram publié — ID : {resp2.json()['id']}")
+
+
+def post_tiktok(image_url, caption):
+    if not TIKTOK_TOKEN:
+        print("TikTok : token manquant, ignoré")
+        return
+    headers = {
+        "Authorization": f"Bearer {TIKTOK_TOKEN}",
+        "Content-Type": "application/json; charset=UTF-8",
+    }
+    body = {
+        "post_info": {
+            "title": caption[:2200],
+            "privacy_level": "PUBLIC_TO_EVERYONE",
+            "disable_duet": False,
+            "disable_comment": False,
+            "disable_stitch": False,
+            "media_type": "PHOTO",
+        },
+        "source_info": {
+            "source": "PULL_FROM_URL",
+            "photo_images": [image_url],
+            "photo_cover_index": 0,
+        },
+    }
+    resp = requests.post(
+        "https://open.tiktokapis.com/v2/post/publish/content/init/",
+        headers=headers,
+        json=body,
+    )
+    resp.raise_for_status()
+    print(f"TikTok publié — ID : {resp.json()['data']['publish_id']}")
+
+
+def post_once():
+    book, caption = pick_book_and_caption()
+    print(f"Livre : {book['title']}")
+    print(f"Post #{post_number()}")
+    print(f"Caption :\n{caption}\n")
+    post_threads(book["image_url"], caption)
+    post_instagram(book["image_url"], caption)
+    post_tiktok(book["image_url"], caption)
 
 
 if __name__ == "__main__":
