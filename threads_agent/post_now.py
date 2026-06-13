@@ -10,8 +10,9 @@ EPOCH           = date(2026, 6, 11)
 
 def post_number():
     days = (date.today() - EPOCH).days
-    slot = 0 if datetime.now().hour < 14 else 1
-    return days * 2 + slot
+    h = datetime.now().hour
+    slot = 0 if h < 10 else (1 if h < 17 else 2)
+    return days * 3 + slot
 
 BOOKS = [
     {
