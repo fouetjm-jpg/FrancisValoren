@@ -35,24 +35,31 @@ jobs:
           echo "post_output<<EOF" >> $GITHUB_OUTPUT
           echo "$OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+          if echo "$OUTPUT" | grep -q "DERNIER_POST_DU_JOUR=true"; then
+            echo "dernier_post=true" >> $GITHUB_OUTPUT
+          else
+            echo "dernier_post=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Envoyer notification email
+      - name: Envoyer récapitulatif du jour
+        if: steps.post.outputs.dernier_post == 'true'
+        continue-on-error: true
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.mail.yahoo.com
           server_port: 587
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "✅ Post Threads publié — FrancisValoren"
+          subject: "📅 Posts du jour publiés — FrancisValoren"
           to: fouetjm@yahoo.fr
           from: fouetjm@yahoo.fr
           body: |
             Bonjour,
 
-            Un nouveau post a été publié sur Threads avec succès.
+            Les 3 posts du jour ont été publiés avec succès.
 
             ──────────────────────────────
             ${{ steps.post.outputs.post_output }}
             ──────────────────────────────
 
-            Bonne journée !
+            Bonne soirée !
