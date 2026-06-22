@@ -1,6 +1,5 @@
-// ⚙ Remplacez la ligne ci-dessous par l'URL de votre Firebase Realtime Database
-const DB = 'https://francis-valoren-default-rtdb.europe-west1.firebasedatabase.app/
-:null';
+// ⚙ URL de votre Firebase Realtime Database
+const DB = 'https://francis-valoren-default-rtdb.europe-west1.firebasedatabase.app';
 
 function flagEmoji(code) {
     if (!code || code.length !== 2) return '🌍';
