@@ -164,6 +164,11 @@ def post_tiktok(image_url, caption):
     print(f"TikTok publié — ID : {resp.json()['data']['publish_id']}")
 
 
+def current_slot():
+    h = datetime.now().hour
+    return 0 if h < 10 else (1 if h < 17 else 2)
+
+
 def post_once():
     book, caption = pick_book_and_caption()
     print(f"Livre : {book['title']}")
@@ -172,6 +177,8 @@ def post_once():
     post_threads(book["image_url"], caption)
     post_instagram(book["image_url"], caption)
     post_tiktok(book["image_url"], caption)
+    if current_slot() == 2:
+        print("DERNIER_POST_DU_JOUR=true")
 
 
 if __name__ == "__main__":
