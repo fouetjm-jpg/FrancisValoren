@@ -1,0 +1,45 @@
+name: Visitor Report
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 9h00 heure française (UTC+1)
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Count site visits from Firebase
+        id: count
+        run: |
+          python - <<'PY'
+          import urllib.request, json, os, sys
+          url = 'https://francis-valoren-default-rtdb.europe-west1.firebasedatabase.app/visites.json?shallow=true'
+          try:
+              with urllib.request.urlopen(url, timeout=20) as r:
+                  data = json.loads(r.read().decode('utf-8'))
+          except Exception as e:
+              print(f"ERROR: {e}")
+              sys.exit(1)
+          total = len(data) if isinstance(data, dict) else 0
+          print(total)
+          print(f"count={total}")
+          PY
+        shell: bash
+
+      - name: Send email with visit total
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.mail.yahoo.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "📊 Rapport de visites — Francis Valoren"
+          to: fouetjm@yahoo.fr
+          from: fouetjm@yahoo.fr
+          body: |
+            Bonjour,
+
+            Le nombre total de visites enregistrées sur le site est : ${{ steps.count.outputs.count }}
+
+            Bonne journée !
