@@ -83,69 +83,6 @@
 
             </div>
 
-            <!-- SORTIE 2 -->
-            <div class="sortie-row">
-
-                <div class="sortie-card">
-                    <div class="sortie-bubble">SORTIE 2</div>
-                    <h2>🕯️Derrière un Speudo</h2>
-                    <p class="sortie-date">Date prévue : <strong>15 janvier 2027</strong></p>
-
-                    <div class="countdown">
-                        <div class="countdown-bloc">
-                            <span id="cd2-jours">--</span>
-                            <small>jours</small>
-                        </div>
-                        <div class="countdown-sep">:</div>
-                        <div class="countdown-bloc">
-                            <span id="cd2-heures">--</span>
-                            <small>heures</small>
-                        </div>
-                        <div class="countdown-sep">:</div>
-                        <div class="countdown-bloc">
-                            <span id="cd2-minutes">--</span>
-                            <small>minutes</small>
-                        </div>
-                        <div class="countdown-sep">:</div>
-                        <div class="countdown-bloc">
-                            <span id="cd2-secondes">--</span>
-                            <small>secondes</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="sortie-text">
-                    <div class="sortie-pitch">
-                        <p>Léna, 12 ans, collégienne passionnée de minéralogie, se rend à un rendez-vous avec un collégien qui à la même passion qu'elle.</p>
-                        <p>Sauf que la personne qu’elle s’apprête à rencontrer n’est pas celle qu’elle imagine.</p>
-                        <p>Il a pris le temps de s'informer sur elle — le nom de son collège, son sandwich préféré, allant jusqu’à la photographier à vélo lorsqu’elle va chercher du pain.</p>
-                        <p>Un thriller sur la prédation en ligne et la course contre la montre d’un inspecteur qui n’ose pas imaginer le pire.</p>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- SORTIE 3 -->
-            <div class="sortie-row">
-
-                <div class="sortie-card">
-                    <div class="sortie-bubble">SORTIE 3</div>
-                    <h2>🌌 Dans les Profondeurs — Thriller</h2>
-                    <p class="sortie-date"><strong>2027</strong></p>
-                </div>
-
-                <div class="sortie-text">
-                    <div class="sortie-pitch">
-                        <p>En 2036, dans un site d'enfouissement nucléaire normand, des ouvriers percent sans le savoir le couvercle d'un cauchemar.</p>
-                        <p>Ce que l'humanité a enfoui pendant des décennies — ses déchets, ses toxines, ses erreurs — a fini par prendre vie dans les profondeurs.</p>
-                        <p>Et ce qui remonte maintenant est affamé.</p>
-                        <p>L'humanité n'a pas fait qu'enterrer ses déchets.</p>
-                        <p>Elle a élevé ses prédateurs.</p>
-                    </div>
-                </div>
-
-            </div>
-
         </div>
 
     </section>
@@ -176,30 +113,6 @@
         majCompteur();
         setInterval(majCompteur, 1000);
 
-        const cible2 = new Date('2027-01-15T00:00:00+01:00');
-
-        function majCompteur2() {
-            const maintenant = new Date();
-            const diff = cible2 - maintenant;
-
-            if (diff <= 0) {
-                document.querySelectorAll('.countdown')[1].innerHTML = '<p style="color:#d6b16d;font-size:1.1em;">C\'est sorti !</p>';
-                return;
-            }
-
-            const jours    = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const heures   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const secondes = Math.floor((diff % (1000 * 60)) / 1000);
-
-            document.getElementById('cd2-jours').textContent    = String(jours).padStart(2, '0');
-            document.getElementById('cd2-heures').textContent   = String(heures).padStart(2, '0');
-            document.getElementById('cd2-minutes').textContent  = String(minutes).padStart(2, '0');
-            document.getElementById('cd2-secondes').textContent = String(secondes).padStart(2, '0');
-        }
-
-        majCompteur2();
-        setInterval(majCompteur2, 1000);
     </script>
 
 
